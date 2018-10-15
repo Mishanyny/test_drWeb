@@ -13,6 +13,7 @@ def create_hash(file):
     while True:
         data = file.read(buf_size)
         if not data:
+            file.seek(0)
             break
         md5.update(data)
     return(md5)
