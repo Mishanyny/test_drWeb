@@ -7,6 +7,17 @@ import hashlib
 app = Flask(__name__)
 
 
+def create_hash(file):
+    md5 = hashlib.md5()
+    buf_size = 65536
+    while True:
+        data = file.read(buf_size)
+        if not data:
+            break
+        md5.update(data)
+    return(md5)
+
+
 @app.before_request
 def check_store_path():
     if not os.path.exists('store'):  
@@ -19,15 +30,15 @@ def upload():
     if request.method == 'POST':
         file = request.files['files']
         if file:
-            filename = hashlib.md5(bytes(file.filename, 'utf-8')).hexdigest()
-            path = os.path.join('store', filename[0:2])
+            file_hash = create_hash(file).hexdigest()  #add hash_func
+            path = os.path.join('store', file_hash[0:2])
             print(path)
             if os.path.exists(path):
-                file.save(os.path.join(path, filename))
+                file.save(os.path.join(path, file_hash))
             else:
                 os.makedirs(path)
-                file.save(os.path.join(path, filename))
-            return jsonify({'success':True, 'hash':filename})
+                file.save(os.path.join(path, file_hash))
+            return jsonify({'success':True, 'hash':file_hash})
 
 
 @app.route('/download/<hash_file>')
